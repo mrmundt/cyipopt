@@ -124,23 +124,34 @@ def handle_ext_modules_win_32_other_ipopt():
     IPOPT_INCLUDE_DIRS = [os.path.join(ipoptdir, "include", "coin-or"),
                           np.get_include()]
 
-    # These are the specific binaries in the IPOPT 3.13.2 binary download:
-    # https://github.com/coin-or/Ipopt/releases/download/releases%2F3.13.2/Ipopt-3.13.2-win64-msvs2019-md.zip
-    IPOPT_LIBS = ["ipopt.dll", "ipoptamplinterface.dll"]
-    IPOPT_LIB_DIRS = [os.path.join(ipoptdir, "lib")]
+    libdir = os.path.join(ipoptdir, "lib")
+
+    if os.path.exists(os.path.join(libdir, "libipopt.dll.a")):
+        # IDAES / MinGW layout
+        # We created libipopt.dll.a.lib in the CI step so MSVC can link it.
+        IPOPT_LIBS = ["libipopt.dll.a.lib"]
+    else:
+        # Official Ipopt MSVC layout
+        IPOPT_LIBS = ["ipopt.dll", "ipoptamplinterface.dll"]
+
+    IPOPT_LIB_DIRS = [libdir]
 
     bin_folder = os.path.join(ipoptdir, "bin")
     IPOPT_DLL = [file for file in os.listdir(bin_folder) if file.endswith(".dll")]
     print("Found ipopt binaries {}".format(IPOPT_DLL))
     IPOPT_DLL_DIRS = [bin_folder]
-    EXT_MODULES = [Extension("ipopt_wrapper",
-                             ["cyipopt/cython/ipopt_wrapper.pyx"],
-                             include_dirs=IPOPT_INCLUDE_DIRS,
-                             libraries=IPOPT_LIBS,
-                             library_dirs=IPOPT_LIB_DIRS)]
-    DATA_FILES = [(sysconfig.get_path('purelib'),
-                  [os.path.join(IPOPT_DLL_DIRS[0], dll)
-                   for dll in IPOPT_DLL])] if IPOPT_DLL else None
+
+    EXT_MODULES = [Extension(
+        "ipopt_wrapper",
+        ["cyipopt/cython/ipopt_wrapper.pyx"],
+        include_dirs=IPOPT_INCLUDE_DIRS,
+        libraries=IPOPT_LIBS,
+        library_dirs=IPOPT_LIB_DIRS,
+    )]
+
+    DATA_FILES = [(sysconfig.get_path("purelib"),
+                  [os.path.join(IPOPT_DLL_DIRS[0], dll) for dll in IPOPT_DLL])] \
+                 if IPOPT_DLL else None
     include_package_data = False
     return EXT_MODULES, DATA_FILES, include_package_data
 
