@@ -129,7 +129,7 @@ def handle_ext_modules_win_32_other_ipopt():
     if os.path.exists(os.path.join(libdir, "libipopt.dll.a")):
         # IDAES / MinGW layout
         # We created libipopt.dll.a.lib in the CI step so MSVC can link it.
-        IPOPT_LIBS = ["libipopt.dll.a.lib"]
+        IPOPT_LIBS = ["libipopt.dll.a"]
     else:
         # Official Ipopt MSVC layout
         IPOPT_LIBS = ["ipopt.dll", "ipoptamplinterface.dll"]
